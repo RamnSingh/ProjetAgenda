@@ -1,0 +1,82 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+int compteur;
+
+/* Cette procédure va ajouter des contacts selon le nombre choisi par  l'utlisateur*/
+
+void ajouter ()
+{   
+
+    FILE *pAgenda;                        
+    pAgenda = fopen("Agenda.txt","a+");
+
+    int numTel,nbContact;
+    char nom[50];
+    char prenom[50];
+    char mel[60];
+
+    printf("Combien de contacts voulez-vous rajouter ?\n");
+    scanf("%d",&nbContact);
+    system("cls");
+
+    for (compteur=0; compteur<nbContact; compteur++)   // On récupère et stocke les informations du contact
+    {
+        printf("Contact numero %d :\n", compteur+1);
+
+        printf("Veuillez saisir le nom : ");
+        fflush(stdin);          
+        gets(nom);
+        fprintf(pAgenda,"%s ",nom);   
+
+        printf("Veuillez saisir le prenom : ");
+        fflush(stdin);
+        gets(prenom);
+        fprintf(pAgenda,"%s ",prenom);
+
+        printf("Veuillez saisir le numero du telephone : ");
+        scanf("%d",&numTel);
+        fprintf(pAgenda,"%d ",numTel);
+
+        printf("Veuillez saisir le mail : ");
+        fflush(stdin);
+        gets(mel);
+        fprintf(pAgenda,"%s\n",mel);
+
+        system("cls");
+    }
+    fclose(pAgenda);          
+}
+
+
+/* Cette procédure va afficher la liste de contacts contenu dans le fichier */
+
+void afficher() 
+{
+
+    FILE *pAgenda;
+    pAgenda = fopen("Agenda.txt","r+");
+    char infoContact[60];
+
+    //fseek(pAgenda,0,SEEK_SET);
+    for(compteur=0; compteur<feof(pAgenda); compteur++)
+    {
+        fscanf(pAgenda,"%s",nom);
+        printf("%s", nom);
+
+        fscanf(pAgenda,"%s",prenom);
+        printf("%s", prenom);
+
+        fscanf(pAgenda,"%s",numTel);
+        printf("%d", numTel);
+
+        fscanf(pAgenda,"%s",mel);
+        printf("%s", mel);
+    }
+    system("PAUSE");    // il nous reste à rajouter le listage par l'ordre alphabétique
+}
+main()
+{
+    ajouter();
+    afficher();
+}
