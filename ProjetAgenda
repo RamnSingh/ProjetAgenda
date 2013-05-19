@@ -1,82 +1,1859 @@
+//Ce programme est un outil permettant de creer , de gerer les repertoires Cryptés ou non.
+
+//Déclaratiion des differents librairies
+
 #include<stdio.h>
-#include<stdlib.h>
+#include <stdlib.h>
+#include <string.h>
+#include <myconio.h>
+#include <conio.h>
+#include <time.h>
+#include <unistd.h>
 
-int compteur;
+//déclaration de préprocesseur
+#define vert textcolor(10);
+#define rouge textcolor(12);
+#define efface system("CLS");
+#define start gotoxy(1,1);
+#define ligne printf("Entrez \"-\" pour retourner au menu précedent et \"*\" pour menu principal.\n\n");
+//structure d'un contact
 
-/* Cette procédure va ajouter des contacts selon le nombre choisi par  l'utlisateur*/
+struct contact{
+    char nom[60];
+    char prenom[60];
+    char mel[255];
+    char numTel[20];
+};
 
-void ajouter ()
-{   
-
-    FILE *pAgenda;                        
-    pAgenda = fopen("Agenda.txt","a+");
-
-    int numTel,nbContact;
-    char nom[50];
-    char prenom[50];
+struct tempContact{
+    char nom[60];
+    char prenom[60];
     char mel[60];
+    char numTel[60];
+};
 
-    printf("Combien de contacts voulez-vous rajouter ?\n");
-    scanf("%d",&nbContact);
-    system("cls");
+int checkNumeric(char *);
+void repertoire(int);
+void optionRepertoire(int, char*);
+void creationRepertoire(char *);
+int mdpValidation(char * );
+void reessayer();
+void choixIncorrect();
+void ajouter(char * nomFichier, char * typeRepertoire, char *appellePar, char * mdp);
+void message(char * nomFonction);
+void insertion(char * nomFichier, char * typeRepertoire, int nombrePersonne, char * ligneContenu);
+void gererRepertoire(char * typeRepertoire);
+void listing(char * typeRepertoire);
+void sousMenu(char * nomRep, char * mdpRep, char * typeRepertoire);
+void menuRepertoire(char * typeRepertoire);
+void afficherModifierSupprimerRepertoire(char * nomRep,char * mdpRep, char * typeRepertoire, char * appellePar);
+void controle(char * nomFonc, char *entree, char * mdpRep, char * typeRepertoire, char * nomFichier);
+void rechercher(char * nomFichier,char * typeRepertoire,char * mdp);
+void rechPar(char * cle, char * nomFichier, char * mdp, char * typeRepertoire);
+void supprimerOuRenommer(char *nomFichier, char * typeRepertoire, char * mdp, char * fonctionExecuter);
+void executer (char * nomFichier, char * typeRepertoire, char * mdp, char * fonctionExecuter);
+void renommer (char * nomFichier, char * typeRepertoire, char * mdp);
+void modifier (char * nomFichier, char * typeRepertoire, char * mdp);
+void supprimerContact(char * nomFichier, char * typeRepertoire, char * mdp);
+void changerMdp(char * nomFichier, char * typeRepertoire, char * mdp);
+void conversion(char * nomFichier, char * typeRepertoire, char * mdp);
+void crypter(char * nomRep, struct contact * info);
+void decrypter(char * nomRep, struct contact * info);
+void crypterMdp(char * mdp);
+void decrypterMdp(char * mdp);
+void propos();
 
-    for (compteur=0; compteur<nbContact; compteur++)   // On récupère et stocke les informations du contact
-    {
-        printf("Contact numero %d :\n", compteur+1);
 
-        printf("Veuillez saisir le nom : ");
-        fflush(stdin);          
-        gets(nom);
-        fprintf(pAgenda,"%s ",nom);   
+//variable global
+int essai;
+char chemin[400];
 
-        printf("Veuillez saisir le prenom : ");
-        fflush(stdin);
-        gets(prenom);
-        fprintf(pAgenda,"%s ",prenom);
 
-        printf("Veuillez saisir le numero du telephone : ");
-        scanf("%d",&numTel);
-        fprintf(pAgenda,"%d ",numTel);
-
-        printf("Veuillez saisir le mail : ");
-        fflush(stdin);
-        gets(mel);
-        fprintf(pAgenda,"%s\n",mel);
-
-        system("cls");
+// main va être appler par le compilateur
+int main(){
+    vert;
+    char choix;
+    debut:
+    efface;
+    getcwd(chemin,sizeof(chemin));
+    printf("Agenda en C\n\n");
+    printf("1.Cr%cer ou g%crer un r%cpertoire\n\n2.Cr%cer ou g%crer un r%cpertoire Crypt%c\n\n3.A propos d'agenda\n\n",130,130,130,130,130,130,130);
+    fflush(stdin);
+    if (essai > 0){
+        reessayer();
+        essai = 0;
     }
-    fclose(pAgenda);          
+    printf("\nVotre choix : ");
+    fflush(stdin);
+    scanf("%c",&choix);
+    switch(choix){
+
+        case '1' : repertoire(1);break;
+        case '2' : repertoire(2);break;
+        case '3' : propos();break;
+        default  : choixIncorrect();essai++;goto debut;
+    }
+
 }
 
 
-/* Cette procédure va afficher la liste de contacts contenu dans le fichier */
+// affiche les options principales d'un repertoire choisi
 
-void afficher() 
-{
+void repertoire(int choix){
 
-    FILE *pAgenda;
-    pAgenda = fopen("Agenda.txt","r+");
-    char infoContact[60];
+    char typeRepertoire[10];
+    if(choix == 1)
+        strcpy(typeRepertoire,"");
+    else if(choix == 2)
+        strcpy(typeRepertoire,"Crypt");
 
-    //fseek(pAgenda,0,SEEK_SET);
-    for(compteur=0; compteur<feof(pAgenda); compteur++)
-    {
-        fscanf(pAgenda,"%s",nom);
-        printf("%s", nom);
 
-        fscanf(pAgenda,"%s",prenom);
-        printf("%s", prenom);
-
-        fscanf(pAgenda,"%s",numTel);
-        printf("%d", numTel);
-
-        fscanf(pAgenda,"%s",mel);
-        printf("%s", mel);
+    char choixOption;
+    vert;
+    debut:
+    efface;
+    gotoxy(1,14);
+    printf("Entrez * pour retourner au menu principal.\n\n");
+    start;
+    printf("Agenda en C..\n\n");
+    printf("Que souhaitez vous faire : \n\n1.Cr%cer un nouveau r%cpertoire %s.\
+           \n\n2.G%crer un r%cpertoire %s\n\n",130,130,typeRepertoire,130,130,typeRepertoire);
+    if (essai > 0){
+        reessayer();
+        essai = 0;
     }
-    system("PAUSE");    // il nous reste à rajouter le listage par l'ordre alphabétique
+    printf("\nVotre choix : ");
+    fflush(stdin);
+    choixOption = getchar();
+
+    switch(choixOption)
+    {
+        case '1' : creationRepertoire(typeRepertoire);break;
+        case '2' : gererRepertoire(typeRepertoire);break;
+        case '*' : chdir(chemin);main();break;
+        default  : choixIncorrect();essai++;goto debut;
+    }
 }
-main()
-{
-    ajouter();
-    afficher();
+
+
+void creationRepertoire(char * typeRepertoire){
+    char nomFichier[160],mdp[160],ligne1[1000];
+    int present,mdpValidation,nomNonAutorise = 0;
+    static int valid=0,mdpErreur=0;
+    chdir(chemin);
+    efface;
+    gotoxy(1,16);
+    ligne;
+    start;
+    printf("Creation du fichier\n\n");
+    rouge;
+    sprintf(ligne1,"\nLe nom du fichier ne doit pas %ctre \"*\",\"-\" ou \"+\".\n\n",130,130,130,130,136);
+    puts(ligne1);
+    vert;
+    if(valid > 0){
+        rouge;
+        printf("Le nom entr%ce a d%cja %ct%c pris.\nVeuillez donner un autre nom :\n\n",130,130,130,130);
+        valid = 0;
+        vert;
+    }
+    printf("Entrez le nom du repertoire, svp : ");
+    fflush(stdin);
+    scanf("%s",nomFichier);
+
+    if(strcmp(nomFichier,"+") == 0)
+        nomNonAutorise += 1;
+
+    if(nomNonAutorise > 0){
+        rouge;
+        printf("\nLe nom du fichier est incorrect.",130,130,130,130);
+        Sleep(3000);
+        vert;
+        creationRepertoire(typeRepertoire);
+    }
+    controle("creationRepertoire",nomFichier,"",typeRepertoire,"");
+    mdperr:
+    if(mdpErreur > 0)
+    {
+        rouge;
+        printf("\nErreur : ");
+        textcolor(10);
+        if(mdpErreur == 1)
+            printf("Minimum carac%cteres autoris%ces sont 8.",138,130);
+        else if(mdpErreur == 2)
+            printf("Max caract%cteres autoris%ces sont 16.",138,130);
+        else if(mdpErreur == 3)
+            printf("Au moins un caract%cres speciale.",138);
+        Sleep(1500);
+        efface;
+        reessayer();
+        gotoxy(1,16);
+        ligne;
+        start;
+        printf("Cr%cation du fichier\n\n",130);rouge;
+        puts(ligne1);vert;
+        printf("\nEntrez le nom du fichier, svp : %s\n",nomFichier);
+
+    }
+    if(strcmp(typeRepertoire,"") == 0)
+    {
+        present = verifNomFichier(nomFichier,typeRepertoire);
+        if(present == 0)
+        {
+            chdir(chemin);
+            mkdir("Repertoire");
+            chdir("Repertoire");
+            FILE *fichier = fopen("listeNonCrypt.txt","a+");
+            fprintf(fichier,"%s\n",nomFichier);
+            FILE *nouveauRepertoire = fopen(strcat(nomFichier,".txt"),"a+");
+            printf("\nLe r%cpertoire %s a %ct%c avec le succ%cs.",130,nomFichier,130,130,130);
+            getch();
+            fclose(nouveauRepertoire);
+            fclose(fichier);
+        }
+        else
+        {
+            valid = 1;
+            creationRepertoire(typeRepertoire);
+        }
+    }
+    else if(strcmp(typeRepertoire,"Crypt") == 0)
+    {
+        present = verifNomFichier(nomFichier,typeRepertoire);
+        if(present == 0)
+        {
+            printf("\nEntrez un mot de passse, svp (min 8 char): ");
+            scanf("%s",mdp);
+            mdpValidation = verifMotDePasse(mdp);
+        }
+        if(present == 0 && mdpValidation == 0)
+        {
+            int i;
+            chdir(chemin);
+            mkdir("RepertoireCrypt");
+            chdir("RepertoireCrypt");
+            FILE *fichier = fopen("listeCrypt.txt","a+");
+            printf("\n\nVotre mot de passe = %s",mdp);
+            crypterMdp(mdp);
+            fprintf(fichier,"%s %s\n",nomFichier,mdp);
+            FILE *nouveauRepertoire = fopen(strcat(nomFichier,".txt"),"a+");
+            printf("\nLe r%cpertoire %s a %ct%c avec le succ%cs.",130,nomFichier,130,130,130);
+            getch();
+            valid = 0;
+            mdpErreur = 0;
+            fclose(nouveauRepertoire);
+            fclose(fichier);
+            chdir(chemin);
+
+        }
+        else if(present > 0)
+        {
+            valid = 1;
+            creationRepertoire(typeRepertoire);
+        }
+        else if(mdpValidation > 0)
+        {
+            mdpErreur = mdpValidation;
+            goto mdperr;
+        }
+    }
+    if(valid == 0)
+    {
+        essai = 0;
+        repOptionErreur:
+        efface;
+        fflush(stdin);
+        printf("Cr%cation du fichier\n\nVoulez-vous rajouter des contacts dans votre r%cpertoire ?\n\n1.Oui\t2.Non\n\n",130,130);
+        if (essai > 0){
+            reessayer();
+            essai = 0;
+        }
+        char choix;
+        printf("\nVotre choix : ");
+        fflush(stdin);
+        scanf("%c",&choix);
+        switch(choix)
+        {
+            case '1' : ajouter(nomFichier,typeRepertoire,"creationFichier","");break;
+            case '2' : message("creationRepertoire");chdir(chemin);main();break;
+            default: choixIncorrect();essai++;goto repOptionErreur;
+        }
+    }
+
+}
+
+void ajouter(char * nomFichier, char * typeRepertoire, char * appellePar, char * mdp){
+    efface;
+    struct contact info;
+    int nombrePersonne;
+    static int compteur;
+    int compte;
+
+    personneAjouter:
+    printf("Insertion des contacts\n\n");
+    if(essai > 0){
+        reessayer();
+        vert;
+        essai = 0;
+        compte = 1;
+    }
+    printf("Nombre de personne ajouter : ");
+    fflush(stdin);
+    compte = scanf("%d",&nombrePersonne);
+    switch (compte)
+    {
+        case  0 : choixIncorrect();essai++;goto personneAjouter;break;
+        default : efface;insertion(nomFichier, typeRepertoire, nombrePersonne,"");break;
+    }
+
+    printf("\n\n!Le fichier %s a %ct%c gen%cr%ce.",nomFichier,130,130,130,130);
+    Sleep(2000);
+    rouge;
+    fflush(stdin);
+
+    point :
+    efface;vert;
+    char choix;
+    printf("Voulez-vous encore rajouter des contacts ?\n\n1.Oui\t\t2.Non\n");
+    if(essai > 0){
+        reessayer();
+        essai = 0;
+    }
+    printf("\nVotre choix : ");
+    scanf("%c",&choix);
+    if(strcmp(appellePar,"sousMenuOption") == 0){
+        switch(choix)
+        {
+            case '1' : ajouter(nomFichier,typeRepertoire,"ajouter",mdp);break;
+            case '2' : controle(appellePar,"-",mdp,typeRepertoire,nomFichier);
+            default: choixIncorrect();essai++;goto point;
+        }
+    }
+    else{
+        switch(choix)
+        {
+            case '1' : essai++;ajouter(nomFichier,typeRepertoire,"ajouter",mdp);break;
+            case '2' : chdir(chemin);main();
+            default: choixIncorrect();essai++;goto point;
+        }
+    }
+
+}
+
+void insertion(char * nomFichier, char * typeRepertoire, int nombrePersonne, char * ligneContenu){
+    struct contact info;
+    static int compteur;
+    char format[3],nom[200],prenom[200],telephone[200],mail[200];
+    puts(ligneContenu);
+
+    if(strcmp(typeRepertoire,"") == 0)
+    {
+        chdir("Repertoire");
+    }
+
+    else if(strcmp(typeRepertoire,"Crypt") == 0)
+        chdir("RepertoireCrypt");
+
+    printf("%s",nomFichier);
+    FILE * fichier = fopen(nomFichier,"a+");
+
+    for(compteur = 0; compteur < nombrePersonne; compteur++)
+    {
+        static int a;
+        int arobase = 0, point = 0,espace = 0,nbCar = 0,erreurs = 0,pos;
+
+        //debut nom
+        nom :
+        efface;
+        printf("%d Contact.\n\n",compteur+ 1);
+        if(a > 0)
+        {
+            if(strcmp(ligneContenu,"") != 0)
+                puts(ligneContenu);
+
+            reessayer();
+            Sleep(1000);
+            a = 0;
+        }
+        printf("\nNom (max 16 char)       : ");
+        scanf("%s",info.nom);
+        if(verifEntree(info.nom,"nom") > 0)
+        {
+            a++;
+            goto nom;
+        }
+        //fin nom
+
+
+        //debut prenom
+        prenom:
+        if(a > 0)
+        {
+            efface;
+            if(strcmp(ligneContenu,"") != 0)
+                puts(ligneContenu);
+            printf("%d Contact.\n\n",compteur + 1);
+            printf("\nNom (max 16 char)       : %s\n\n",info.nom);
+            reessayer();
+            Sleep(1000);
+            a = 0;
+        }
+        printf("\nPrenom (max 16 char)    : ");
+        scanf("%s",info.prenom);
+
+        if(verifEntree(info.prenom,"prenom") > 0)
+        {
+            a++;
+            goto prenom;
+        }
+        //fin prenom
+
+        //debut numtel
+        telephone :
+        if(a > 0)
+        {
+            efface;
+            if(strcmp(ligneContenu,"") != 0)
+            puts(ligneContenu);
+            printf("%d Contact.\n\n",compteur + 1);
+            printf("\nNom (max 16 char)       : %s\n\n",info.nom);
+            printf("Prenom (max 16 char)      : %s\n\n",info.prenom);
+            reessayer();
+            Sleep(1000);
+            a = 0;
+        }
+        printf("\nTelephone (min 10 char) : ");
+        scanf("%s",info.numTel);
+        if(verifEntree(info.numTel,"telephone") > 0)
+        {
+            if(strcmp(ligneContenu,"ligneContenu") == 0)
+                puts(ligneContenu);
+
+            a++;
+            goto telephone;
+        }
+        //fin numtel
+
+        //debut mail
+        mail:
+        if(a > 0)
+        {
+            efface;
+            if(strcmp(ligneContenu,"") != 0)
+                puts(ligneContenu);
+            printf("%d Contact.\n\n",compteur + 1);
+            printf("\nNom (max 16 char)       : %s\n\n",info.nom);
+            printf("Prenom (max 16 char)      : %s\n\n",info.prenom);
+            printf("\nTelephone (min 10 char) : %s\n\n",info.numTel);
+            reessayer();
+            Sleep(1000);
+            a = 0;
+        }
+        printf("\nMail                    : ");
+        scanf("%s",info.mel);
+        if(verifEntree(info.mel,"mail") > 0)
+        {
+            a++;
+            goto mail;
+        }
+        if(strcmp(typeRepertoire,"Crypt") == 0){
+            crypter(nomFichier,&info);
+        }
+
+        int i,j,k;
+
+        for(i = 0; !feof(fichier); i++){
+            fscanf(fichier,"%s %s %s %s",nom,prenom,telephone,mail);
+            for(j = 0; j < i; j++){
+                if(strcmp(nom,info.nom) > 0){
+                    fprintf(fichier,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel);
+                    break;
+                }
+                else{
+                    printf("Not done");
+                    break;
+                }
+            }
+        }
+
+    }
+
+    fclose(fichier);    //fermeture du fichier
+
+}
+//fonction pour gerer le repertoire deja cree
+
+void gererRepertoire(char * typeRepertoire){
+    efface;
+    char nomRep[60],mdpRep[100];
+    chdir(chemin);
+
+    if(strcmp(typeRepertoire,"") == 0)
+    {
+        listing(typeRepertoire);
+        puts("\n");
+        ligne;
+        if(essai > 0){
+            reessayer();
+            essai = 0;
+        }
+        printf("Entrez le nom de repertoire : ");
+        fflush(stdin);
+        scanf("%s",nomRep);
+        controle("gererRepertoire",nomRep,"",typeRepertoire,"");
+        sousMenu(nomRep, "",typeRepertoire);
+    }
+
+    else if(strcmp(typeRepertoire,"Crypt") == 0)
+    {
+        listing(typeRepertoire);
+        puts("\n");
+        ligne;
+        if(essai > 0){
+            reessayer();
+            essai = 0;
+        }
+        printf("Entrez le nom de repertoire : ");
+        scanf("%s",nomRep);
+        controle("gererRepertoire",nomRep,"",typeRepertoire,"");
+        printf("Entrez le mot de passe : ");
+        scanf("%s",mdpRep);
+        crypterMdp(mdpRep);
+        controle("gererRepertoire",nomRep,"",typeRepertoire,"");
+        sousMenu(nomRep, mdpRep, typeRepertoire);
+
+    }
+
+
+    printf("\n\n");
+    if(essai > 0)
+        reessayer();
+
+}
+
+//listing repertoire
+void listing(char * typeRepertoire){
+    int num = 0,nbEssai = 0;
+    char nomRep[160];
+    FILE *liste;
+    chdir(chemin);
+    printf("G%crer le(s) r%cpertoire(s)\n\n",130,130);
+    if(strcmp(typeRepertoire,"") == 0)
+    {
+        fflush(stdin);
+
+        liste = fopen("Repertoire\\listeNonCrypt.txt","r+");
+        while(fscanf(liste,"%s",nomRep) != EOF)     //%*[^\n]
+        {
+            num++;
+            if(num == 1)
+            {
+                printf("Le(s) r%cpertoire(s) existant dans l'agenda sont  : \n\n",130);
+                printf("  No.\tNom de repertoire\n\n");
+            }
+            printf("  %.2d\t%s\n",num,nomRep);
+
+        }
+    }
+    else if(strcmp(typeRepertoire,"Crypt") == 0)
+    {
+        char mdp[100] = "";
+        fflush(stdin);
+        liste = fopen("RepertoireCrypt\\listeCrypt.txt","r+");
+        while(fscanf(liste,"%s %s\n",nomRep,mdp) != EOF)     //%*[^\n]
+        {
+            num++;
+            if(num == 1)
+            {
+                printf("Le(s) r%cpertoire(s) existant dans l'agenda sont  : \n\n",130);
+                printf("  No.\tNom de repertoire\n\n");
+            }
+            printf("  %.2d\t%s\n",num,nomRep);
+        }
+    }
+    fclose(liste);
+
+
+    if(num == 0)
+    {
+        printf("Il n'existe aucun repertoire.\n\n");
+        textcolor(10);
+        Sleep(1000);
+        int choix;
+        static int nbEssai;
+        if (nbEssai > 0)
+        {
+            reessayer();
+        }
+        printf("Voulez-vous cr%cer un nouveau r%cpertoire ?\n\n1.Oui\t2.Non\n\nVotre choix : ",130,130);
+        scanf("%d",&choix);
+        switch(choix)
+        {
+            case 1 : efface;creationRepertoire(typeRepertoire);break;
+            case 2 : chdir(chemin);main();break;
+            default: choixIncorrect();nbEssai++;listing(typeRepertoire);break;
+        }
+    }
+
+}
+
+void sousMenu(char * nomRep,char * mdpRep,char * typeRepertoire){
+    chdir(chemin);
+    char nomRepTrouve[60],mdpRepTrouve[60];
+    FILE * fichierOuvert;
+    if(strcmp(typeRepertoire,"") == 0)
+    {
+        chdir("Repertoire");
+        nomRep = strcat(nomRep,".txt");
+        fichierOuvert = fopen(nomRep,"r");
+        fclose(fichierOuvert);
+    }
+
+    else if(strcmp(typeRepertoire,"Crypt") == 0)
+    {
+        int i;
+        chdir("RepertoireCrypt");
+        FILE * listeCrypt = fopen("listeCrypt.txt","r");
+        while(fscanf(listeCrypt,"%s %s\n",nomRepTrouve,mdpRepTrouve) != EOF)
+        {
+            if(strcmp(nomRep,nomRepTrouve) == 0 && strcmp(mdpRep,mdpRepTrouve) == 0)
+            {
+                nomRep = strcat(nomRep,".txt");
+                fichierOuvert = fopen(nomRep,"r+");
+                fclose(fichierOuvert);
+                break;
+            }
+            else
+            {
+                fichierOuvert = 0;
+            }
+        }
+        fclose(listeCrypt);
+    }
+
+    if(fichierOuvert != 0)
+    {
+        char choix;
+        efface;
+        option :
+        menuRepertoire(typeRepertoire);
+        printf("\n\n");
+        ligne;
+        if(essai > 0){
+            reessayer();
+        }
+        essai = 0;
+        printf("Votre choix : ");
+        fflush(stdin);
+        scanf("%c",&choix);
+        if(choix == '*')
+        controle("sousMenu","*","",typeRepertoire,"");
+
+        if(choix == '-')
+        controle("sousMenu","-","",typeRepertoire,"");
+
+        fclose(fichierOuvert);
+
+        if(strcmp(typeRepertoire,"") == 0){
+            switch(choix)
+            {
+                case '1' : afficherModifierSupprimerRepertoire(nomRep,mdpRep, typeRepertoire,"");break;
+                case '2' : ajouter(nomRep, typeRepertoire,"sousMenuOption","");break;
+                case '3' : modifier(nomRep,typeRepertoire,mdpRep);break;
+                case '4' : supprimerContact(nomRep,typeRepertoire,mdpRep);break;
+                case '5' : rechercher(nomRep,typeRepertoire,mdpRep);break;
+                case '6' : supprimerOuRenommer(nomRep,typeRepertoire,mdpRep,"renommer");break;
+                case '7' : supprimerOuRenommer(nomRep,typeRepertoire,mdpRep,"supprimer");break;
+                case  '8': chdir(chemin);main();break;
+                default: choixIncorrect();essai++;goto option;
+            }
+        }
+        else{
+            switch(choix)
+            {
+                case '1' : afficherModifierSupprimerRepertoire(nomRep,mdpRep, typeRepertoire,"");break;
+                case '2' : ajouter(nomRep, typeRepertoire,"sousMenuOption",mdpRep);break;
+                case '3' : modifier(nomRep,typeRepertoire,mdpRep);break;
+                case '4' : supprimerContact(nomRep,typeRepertoire,mdpRep);break;
+                case '5' : rechercher(nomRep,typeRepertoire,mdpRep);break;
+                case '6' : supprimerOuRenommer(nomRep,typeRepertoire,mdpRep,"renommer");break;
+                case '7' : supprimerOuRenommer(nomRep,typeRepertoire,mdpRep,"supprimer");break;
+                case '8' : changerMdp(nomRep,typeRepertoire,mdpRep);break;
+                case '9' : conversion(nomRep,typeRepertoire,mdpRep);break;//convetir en crypt
+                case  'a': chdir(chemin);main();break;
+                default: choixIncorrect();essai++;goto option;
+            }
+        }
+
+    }
+    else if(fichierOuvert == 0)
+    {
+        char tempNomRep[200] = "";
+        rouge;
+        if(strcmp(typeRepertoire,"") == 0)
+        printf("\nLe r%cpertoire du nom \"%s\" n\'existe pas.",130,nomRep);
+        if(strcmp(typeRepertoire,"Crypt") == 0)
+            printf("\nLe r%cpertoire du nom \"%s\" n\'existe pas ou votre mot de passe est incorrect.",130,strncat(tempNomRep,nomRep,(strlen(nomRep)-4)));
+
+        Sleep(3000);
+        vert;
+        essai++;
+        gererRepertoire(typeRepertoire);
+    }
+
+}
+void afficherModifierSupprimerRepertoire(char * nomRep, char * mdpRep, char * typeRepertoire, char * appellePar){
+    efface;
+    FILE * repertoireAfficher;
+    struct contact info;
+    struct tempContact tempInfo;
+    char choix;
+    char tempLigne[2000] = "";
+    char nomRepertoire[1000] = "";
+
+    if(strcmp(typeRepertoire,"") == 0)
+        chdir("Repertoire");
+    else if(strcmp(typeRepertoire,"Crypt") == 0)
+        chdir("RepertoireCrypt");
+
+    repertoireAfficher = fopen(nomRep,"r+");
+    printf("Liste des contacts dans le repertoire :\n\n");
+    printf("No.");
+    gotoxy(5,3);
+    printf("Nom");
+    gotoxy(18,3);
+    printf("Prenom");
+    gotoxy(31,3);
+    printf("Telephone");
+    gotoxy(52,3);
+    printf("Mail\n\n");
+    int nb = 0;
+    int i = 5,j=0;
+    while(!feof(repertoireAfficher))
+    {j++;
+
+        fscanf(repertoireAfficher,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel);
+        if(strcmp(typeRepertoire,"Crypt") == 0){
+                decrypter(nomRep, &info);
+        }
+        nb++;
+        printf("%.2d",nb);
+        gotoxy(5,i);
+        printf("%s",info.nom);
+        gotoxy(18,i);
+        printf("%s",info.prenom);
+        gotoxy(31,i);
+        printf("%s",info.numTel);
+        gotoxy(52,i);
+        printf("%s\n\n",info.mel);
+        i += 2;
+    }
+    fclose(repertoireAfficher);
+    printf("<---------------------------------FIN-------------------------------------->\n\n");
+
+    if(strcmp(appellePar,"modifier") == 0){
+        char ligneContenu[1000];
+        char tempNom[200] ="copy";
+        FILE *repertoireModifier = fopen(nomRep,"r");
+        int id;
+        strcat(tempNom,nomRep);
+        remove(tempNom);   //on supprime si le fichier deja existe
+        printf("Entrez l'ID du contact %c modifier : ",133);
+        scanf("%d",&id);
+        int ligne1 = 0;
+        printf("%s\n",nomRep);
+        if(nb >= id)
+        {
+
+                FILE * tempRepertoire = fopen(tempNom,"a+");
+                while(fscanf(repertoireModifier,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel) != EOF){
+                ++ligne1;
+                fflush(stdin);
+                if(id == ligne1){
+                    fclose(tempRepertoire);
+                    if(strcmp(typeRepertoire,"Crypt") == 0)
+                    decrypter(nomRep, &info);
+
+                    sprintf(ligneContenu,"Les infos courants du contact qui a ID = %d.\n\nNom            : %s\nPrenom         : %s\nTelephone      : %s\nMail           : %s\n\n",id,info.nom,info.prenom,info.numTel,info.mel);
+                    puts(ligneContenu);
+                    getch();
+                    insertion(tempNom,typeRepertoire,1,ligneContenu);
+                    tempRepertoire = fopen(tempNom,"a+");
+                    continue;
+                }
+                else{
+                    fprintf(tempRepertoire,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel);
+                }
+            }
+                fclose(repertoireModifier);
+                fclose(tempRepertoire);
+                remove(nomRep);
+                rename(tempNom,nomRep);
+                remove(tempNom);
+                printf("Le contact %d a %ct%c modifi%c.\n\n",id,130,130,130);
+
+        }
+        else{
+            printf("Le contact choisi n'existe pas.\n");
+            choixIncorrect();
+            essai++;
+            afficherModifierSupprimerRepertoire(nomRep,mdpRep,typeRepertoire,"modifier");
+        }
+
+    }
+
+    if(strcmp(appellePar,"supprimer") == 0){
+        int id;
+        char ligneContenu[1000];
+        char tempNom[200] ="copy";
+        FILE *repertoireModifier = fopen(nomRep,"r");
+        strcat(tempNom,nomRep);
+        remove(tempNom);
+        printf("Entrez l'ID du contact a supprimer : ");
+        fflush(stdin);
+        scanf("%d",&id);
+        int ligne1 = 0;
+        if(nb >= id)
+        {
+
+                FILE * tempRepertoire = fopen(tempNom,"a+");
+                while(fscanf(repertoireModifier,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel) != EOF){
+                ++ligne1;
+                if(id == ligne1){
+                    continue;
+                }
+                else{
+                    fprintf(tempRepertoire,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel);
+                }
+            }
+                fclose(repertoireModifier);
+                fclose(tempRepertoire);
+                remove(nomRep);
+                rename(tempNom,nomRep);
+                remove(tempNom); //reverrifie si lz fichier a ete supprime
+                printf("Le contact %d a %ct%c supprim%c.\n\n",id,130,130,130);
+
+        }
+        else{
+            printf("Le contact choixi n'existe pas.\n");
+            choixIncorrect();
+            essai++;
+            afficherModifierSupprimerRepertoire(nomRep,mdpRep,typeRepertoire,"supprimer");
+        }
+
+
+    }
+
+    char entree[10];
+    printf("Entrez - pour retourner au menu pr%cc%cdent et * pour menu principal : ",130,130);
+    scanf("%s",entree);
+    nb = 0;
+    if(strcmp(entree,"-") == 0){
+        if(strcmp(typeRepertoire,"") == 0){
+            strncat(nomRepertoire,nomRep,(strlen(nomRep)-4));   //ici le nom fu fichier estnom.txt ici on enleve l'extension
+            sousMenu(nomRepertoire,mdpRep,typeRepertoire);
+        }
+        else{
+        strncat(nomRepertoire,nomRep,(strlen(nomRep)-4));   //ici le nom fu fichier estnom.txt ici on enleve l'extension
+        sousMenu(nomRepertoire,mdpRep,typeRepertoire);
+        }
+
+    }
+    if(strcmp(entree,"*") == 0){
+        chdir(chemin);
+        main();
+    }
+
+}
+
+void rechercher(char * nomFichier,char * typeRepertoire, char * mdp){
+    efface;
+    char choix;
+    choixErr:
+    gotoxy(1,16);
+    ligne;
+    start;
+    printf("Rechercher par :\n\n1.Nom\t\t2.Prenom\n\n3.Mail\t\t4.Telphone\n\n");
+    if(essai > 0){
+        reessayer();
+        essai = 0;
+    }
+    printf("\nVotre choix : ");
+    fflush(stdin);
+    scanf("%c",&choix);
+
+    if(choix == '*')
+    controle("sousMenuOption","*",mdp,typeRepertoire,nomFichier);
+
+    if(choix == '-')
+    controle("sousMenuOption","-",mdp,typeRepertoire,nomFichier);
+
+    switch(choix)
+    {
+        case '1' : rechPar("nom",nomFichier, mdp,typeRepertoire);break;
+        case '2' : rechPar("prenom",nomFichier, mdp,typeRepertoire);break;
+        case '3' : rechPar("mail",nomFichier, mdp,typeRepertoire);break;
+        case '4' : rechPar("telephone",nomFichier, mdp,typeRepertoire);break;
+        default  : choixIncorrect();essai++;goto choixErr;
+    }
+}
+
+void rechPar(char * cle, char * nomFichier, char * mdp, char * typeRepertoire){
+    char motCle[200],ligneScanne[1000],nom[200];
+    int nbLigne = 1,nbPersonne = 0;
+    struct contact info;
+    FILE * fichier = fopen(nomFichier,"r+");
+    if(strcmp(cle,"nom") == 0){
+        printf("Entrez le nom du contact : ");
+        scanf("%s",motCle);
+
+        if(strcmp(typeRepertoire,"Crypt") == 0){
+            crypterMdp(motCle);
+            chdir("RepertoireCrypt");
+        }
+        else{
+            chdir("Repertoire");
+        }
+
+    int tete = 0;
+    int comptePersonne = 0;
+    efface;
+    while(fscanf(fichier,"%s",info.nom) != EOF)
+    {
+        printf("%s",info.nom);
+        if(stricmp(motCle,info.nom) == 0)
+        {
+             if(tete == 0)
+             {
+                printf("Personne(s) porte le nom = %s sont cit%cs dessous :\n\n",motCle,130);
+             }
+            char taille[16] = {0};
+            comptePersonne++;
+            printf("%d contact :\n",comptePersonne);
+            fseek(fichier,-(strlen(info.nom)),SEEK_CUR);
+            fscanf(fichier,"%s %s %s %s",info.nom,info.prenom,info.numTel,info.mel);
+            if(strcmp(typeRepertoire,"Crypter") == 0)
+            decrypter(nomFichier, &info);
+
+            printf("Nom\t\t: %s\nPrenom\t\t: %s\nMail\t\t: %s\nTelephone\t: %s\n\n",info.nom,info.prenom,info.mel,info.numTel);
+            tete++;
+            nbPersonne++;
+
+        }
+
+        nbLigne++;
+    }
+    fclose(fichier);
+    }
+
+    if(strcmp(cle,"prenom") == 0){
+        printf("Entrez le prenom du contact : ");
+        scanf("%s",motCle);
+
+        if(strcmp(typeRepertoire,"Crypt") == 0)
+            crypterMdp(motCle);
+    efface;
+    int tete = 0;
+    int comptePersonne = 0;
+    while(fscanf(fichier,"%s %s",info.nom,info.prenom) != EOF)
+    {
+        if(strcmp(motCle,info.prenom) == 0)
+        {
+             if(tete == 0)
+             {
+                printf("Personne(s) porte le prenom = %s sont cit%cs dessous :\n\n",motCle,130);
+             }
+            char taille[16] = {0};
+            comptePersonne++;
+            printf("%d contact :\n",comptePersonne);
+
+            fseek(fichier,-((strlen(info.nom)) + (strlen(info.prenom)) + 1 /*espace*/),SEEK_CUR);
+
+            fscanf(fichier,"%s %s %s %s",info.nom,info.prenom,info.numTel,info.mel);
+            decrypter(nomFichier, &info);
+            printf("Nom\t\t: %s\nPrenom\t\t: %s\nMail\t\t: %s\nTelephone\t: %s\n\n",info.nom,info.prenom,info.mel,info.numTel);
+            tete++;
+            nbPersonne++;
+        }
+
+        nbLigne++;
+    }
+    fclose(fichier);
+    }
+
+    if(strcmp(cle,"mail") == 0){
+        printf("Entrez le mail du contact : ");
+        scanf("%s",motCle);
+
+        if(strcmp(typeRepertoire,"Crypt") == 0)
+            crypterMdp(motCle);
+    efface;
+    int tete = 0;
+    int comptePersonne = 0;
+    FILE * fichier = fopen(nomFichier,"r+");
+    while(fscanf(fichier,"%s %s %s %s",info.nom,info.prenom,info.numTel,info.mel) != EOF)
+    {
+
+        if(strcmp(motCle,info.mel) == 0)
+        {
+
+             if(tete == 0)
+             {
+                printf("Personne(s) porte le mail = %s sont cit%cs dessous :\n\n",motCle,130);
+             }
+            char taille[16] = {0};
+
+            printf("%d contact :\n",comptePersonne++);
+
+            fseek(fichier,-((strlen(info.nom)) + (strlen(info.prenom)) + (strlen(info.numTel)) + (strlen(info.mel)) + 3 /*espaces*/),SEEK_CUR);
+
+            fscanf(fichier,"%s %s %s %s",info.nom,info.prenom,info.numTel,info.mel);
+            decrypter(nomFichier, &info);
+            printf("Nom\t\t: %s\nPrenom\t\t: %s\nMail\t\t: %s\nT%cl%cphone\t: %s\n\n",info.nom,info.prenom,info.mel,130,130,info.numTel);
+            tete++;
+            nbPersonne++;
+
+        }
+
+        nbLigne++;
+    }
+    fclose(fichier);
+    }
+
+    if(strcmp(cle,"telephone") == 0){
+        printf("Entrez le t%cl%cphone du contact : ",130,130);
+        scanf("%s",motCle);
+
+        if(strcmp(typeRepertoire,"Crypt") == 0)
+            crypterMdp(motCle);
+    efface;
+    int tete = 0;
+    int comptePersonne = 0;
+    FILE * fichier = fopen(nomFichier,"r+");
+    while(fscanf(fichier,"%s %s %s %s",info.nom,info.prenom,info.numTel,info.mel) != EOF)
+    {
+
+        if(strcmp(motCle,info.numTel) == 0)
+        {
+
+             if(tete == 0)
+             {
+                printf("Personne(s) qui a le t%cl%cphone = %s sont cites dessous :\n\n",130,130,motCle);
+             }
+
+            char taille[16] = {0};
+
+            printf("%d contact :\n",comptePersonne++);
+            fseek(fichier,-((strlen(info.nom)) + (strlen(info.prenom)) + (strlen(info.numTel)) + (strlen(info.mel)) + 3 /*espaces*/),SEEK_CUR);
+
+            fscanf(fichier,"%s %s %s %s",info.nom,info.prenom,info.numTel,info.mel);
+            decrypter(nomFichier, &info);
+            printf("Nom\t\t: %s\nPrenom\t\t: %s\nMail\t\t: %s\nT%cl%cphone\t: %s\n\n",info.nom,info.prenom,info.mel,130,130,info.numTel);
+            tete++;
+            nbPersonne++;
+
+        }
+        comptePersonne = 0;
+
+        nbLigne++;
+    }
+    fclose(fichier);
+    }
+    fclose(fichier);
+
+    if(nbPersonne == 0)
+        printf("Il n\'existe aucun contact qui correspond votre choix(%s) !!!",motCle);
+
+    if(strcmp(mdp,"") == 0){
+        strcpy(typeRepertoire,"");
+    }
+    else{
+        strcpy(typeRepertoire,"Crypt");
+    }
+    printf("\n\n");
+    ligne;
+    char choix;
+    if(essai > 0){
+        reessayer();
+        essai = 0;
+    }
+    printf("Votre choix : ");
+    fflush(stdin);
+    scanf("%c",&choix);
+    switch(choix)
+    {
+        case '-' : rechercher(nomFichier,typeRepertoire,mdp);break;
+        case '*' : chdir(chemin);main();break;
+        default  : choixIncorrect();essai++;rechPar(cle,nomFichier,mdp,motCle);
+    }
+
+}
+
+void supprimerOuRenommer(char *nomFichier, char * typeRepertoire, char * mdp, char * fonctionExecuter){
+    int situation;
+    char * confirmMdp;
+    char confirmation;
+    essai = 0;
+    choixErreur:
+    efface;
+    if(strcmp(fonctionExecuter,"supprimer") == 0){
+        printf("Voulez-vous suprimmer le r%cpertoire %s ?\n\n",130,nomFichier);
+    }
+    else{
+        printf("Voulez-vous renommer le repertoire %s ?\n\n",nomFichier);
+    }
+    rouge;
+    printf("1.Oui\t");
+    vert;
+    printf("2.Non\n\n");
+    if(essai > 0){
+        reessayer();
+        essai = 0;
+    }
+    printf("Votre r%cponse : ",130);
+    fflush(stdin);
+    scanf("%c",&confirmation);
+
+    switch(confirmation)
+    {
+        case '1' : if(strcmp(fonctionExecuter,"supprimer") == 0)
+                        executer(nomFichier,typeRepertoire,mdp,fonctionExecuter);
+                    else
+                        executer(nomFichier,typeRepertoire,mdp,fonctionExecuter);
+                    break;
+        case '2' : sousMenu(nomFichier,mdp,typeRepertoire);break;
+        default  : choixIncorrect();essai++;goto choixErreur;
+    }
+}
+
+void executer(char * nomFichier, char * typeRepertoire, char * mdp, char * fonctionExecuter){
+
+    static int mdpEssai;
+    int situation,present;
+    char confirmMdp[100],mdpRepertoire[100];
+    char nouveauNom[100] = "";
+    FILE * liste,* listeCopy;
+    char nomRepertoire[200], nomSansExtension[200] = "";
+    strncat(nomSansExtension,nomFichier,(strlen(nomFichier))- 4);
+    if(strcmp(typeRepertoire, "") == 0){
+        liste = fopen("listeNonCrypt.txt","r");
+        listeCopy = fopen("listeCopyNonCrypt.txt","w+");
+    }
+    else{
+        liste = fopen("listeCrypt.txt","r");
+        listeCopy = fopen("listeCopyCrypt.txt","w+");
+    }
+
+    if(strcmp(fonctionExecuter,"supprimer") == 0){
+        if(strcmp(typeRepertoire,"") == 0){
+            while(fscanf(liste,"%s",nomRepertoire) != EOF){
+
+                if(strcmp(nomSansExtension,nomRepertoire) == 0){
+                    continue;
+                }
+                else{
+                    fprintf(listeCopy,"%s\n",nomRepertoire);
+                }
+            }
+            fclose(liste);
+            fclose(listeCopy);
+            remove("listeNonCrypt.txt");
+            rename("listeCopyNonCrypt.txt","listeNonCrypt.txt");
+            situation = remove(nomFichier);
+            if (situation == 0)
+                printf("Le r%cpertoire %s a %ct%c supprim%c.",130,nomFichier,130,130);
+            else
+                printf("Le r%cpertoire %s n\'a pas %ct%c supprim%c.",130,nomFichier,130,130,130);
+        }
+        else{
+            if(mdpEssai > 0){
+                reessayer();
+                mdpEssai = 0;
+            }
+            puts("Entrez votre mot de passe : ");
+            scanf("%s",confirmMdp);
+            int i;
+            crypterMdp(mdp);
+
+            if(strcmp(mdp,confirmMdp) == 0){
+                while(fscanf(liste,"%s %s",nomRepertoire,mdpRepertoire) != EOF){
+
+                if(strcmp(nomSansExtension,nomRepertoire) == 0){
+                    continue;
+                }
+                else{
+                    fprintf(listeCopy,"%s %s\n",nomRepertoire,mdpRepertoire);
+                }
+            }
+            fclose(liste);
+            fclose(listeCopy);
+            remove("listeCrypt.txt");
+            rename("listeCopyCrypt.txt","listeCrypt.txt");
+            situation = remove(nomFichier);
+            if (situation == 0)
+                printf("Le r%cpertoire %s a %ct%c supprim%c.",130,nomFichier,130,130,130);
+            else
+                printf("Le r%cpertoire %s n\'a pas %ct%c supprim%c.",130,nomFichier,130,130,130);
+            }
+            else{
+                rouge;
+                puts("Mot de passe incorrect");
+                vert;
+                mdpEssai++;
+                supprimerOuRenommer(nomFichier,typeRepertoire,mdp,"supprimer");
+            }
+
+        }
+
+        printf("\n\n");
+        choixErreur:
+        printf("Entrer \"*\" pour retourner au menu principale ou \"ESC\" pour quitter l'application.\n\n");
+        char choix;
+        if(essai > 0){
+                printf("\n");
+            reessayer();
+            essai = 0;
+        }
+        printf("Votre choix : ");
+        fflush(stdin);
+        scanf("%c",&choix);
+        switch(choix)
+        {
+            case '-' : rouge;printf("Vous ne pouvez pas revenir en arriere car le fichier %s n'existe plus.\n\n",nomFichier);vert;essai++;goto choixErreur;break;
+            case '*' : chdir(chemin);main();break;
+            case 27  : exit(0);
+            default  : choixIncorrect();essai++;goto choixErreur;
+        }
+    }
+    else{
+            char ligne1[1000];
+            static int nomNonAutorise = 0;
+            rouge;
+            sprintf(ligne1,"\nLe nom du r%cpertoire ne doit pas %ctre \"*\",\"-\" ou \"+\".\n\n",130,136);
+            puts(ligne1);
+            vert;
+            printf("Entrez un nouveau nom pour r%cpertoire \"%s\" : ",130,nomSansExtension);
+            scanf("%s",nouveauNom);
+            if(strcmp(nouveauNom,"+") == 0)
+                nomNonAutorise += 1;
+
+            if(nomNonAutorise > 0){
+                rouge;
+                printf("\nLe nom du Repertoire est incorrect.",130,130,130,130);
+                Sleep(3000);
+                vert;
+                supprimerOuRenommer(nomFichier,typeRepertoire,mdp,"renommer");
+                nomNonAutorise = 0;
+            }
+printf("%s",nouveauNom);
+            present = verifNomFichier(nouveauNom,typeRepertoire);
+            if(present == 0)
+            {
+                if(strcmp(typeRepertoire,"") == 0){
+                while(fscanf(liste,"%s",nomRepertoire) != EOF){
+                    if(strcmp(nomRepertoire,nomSansExtension) == 0){
+                        fprintf(listeCopy,"%s\n",nouveauNom);
+                    }
+                    else{
+                        fprintf(listeCopy,"%s\n",nomRepertoire);
+                    }
+                }
+                fclose(liste);
+                fclose(listeCopy);
+                chdir("Repertoire");
+                remove("listeNonCrypt.txt");
+                rename("listeCopyNonCrypt.txt","listeNonCrypt.txt");
+                rename(nomFichier,strcat(nouveauNom,".txt"));
+                }
+                if(strcmp(typeRepertoire,"Crypt") == 0){
+                    printf("%s %s",liste,listeCopy);
+                    while(fscanf(liste,"%s %s",nomRepertoire,mdpRepertoire) != EOF){
+                    if(strcmp(nomRepertoire,nomSansExtension) == 0){
+                        fprintf(listeCopy,"%s %s\n",nouveauNom,mdpRepertoire);
+                    }
+                    else{
+                        fprintf(listeCopy,"%s %s\n",nomRepertoire,mdpRepertoire);
+                    }
+                }
+                fclose(liste);
+                fclose(listeCopy);
+                chdir("RepertoireCrypt");
+                remove("listeCrypt.txt");
+                rename("listeCopyCrypt.txt","listeCrypt.txt");
+                rename(nomFichier,strcat(nouveauNom,".txt"));
+                }
+                printf("Le r%cpertoire %s a %ct%c renomm%c.",130,nomFichier,130,130,130);
+            }
+            if(present != 0){
+                rouge;
+                printf("Le nom entr%ce a d%cja %ct%c pris.\nVeuillez donner un autre nom :\n\n",130,130,130,130);
+                vert;
+                Sleep(3000);
+                supprimerOuRenommer(nomFichier,typeRepertoire,mdp,"renommer");
+            }
+            fclose(liste);
+            fclose(listeCopy);
+
+    }
+    printf("\n\n");
+    if(strcmp(fonctionExecuter,"renommer") == 0){
+        strcpy(nomFichier,nouveauNom);
+    }
+    char choix;
+    choixErreur1:
+    if(essai > 0){
+        efface;
+        reessayer();
+        essai = 0;
+    }
+    ligne;
+    fflush(stdin);
+    scanf("%c",&choix);
+    if(choix == '-'){
+    controle("sousMenuOption","-",mdpRepertoire,typeRepertoire,nomFichier);
+    }
+    else if(choix == '*'){
+        controle("sousMenuOption","*",mdpRepertoire,typeRepertoire,nomFichier);
+    }
+    else{
+        choixIncorrect();
+        essai++;
+        goto choixErreur1;
+    }
+}
+
+void modifier (char * nomFichier, char * typeRepertoire, char * mdp){
+    afficherModifierSupprimerRepertoire(nomFichier,mdp,typeRepertoire,"modifier");
+
+}
+
+void supprimerContact(char * nomFichier, char * typeRepertoire, char * mdp){
+
+    afficherModifierSupprimerRepertoire(nomFichier,mdp,typeRepertoire,"supprimer");
+
+}
+
+void menuRepertoire(char * typeRepertoire){
+        printf("Choisissez un des options listee dessous : \n\n");
+        printf("1.Afficher \t\t\t2.Ajouter\n\n3.Modifier un contact\t\t4.Supprimer un contact\n\n5.Rechercher des contacts\t6.Renommer le Repertoire\
+               \n\n7.Supprimer le Repertoire\t");
+    if(strcmp(typeRepertoire,"Crypt") == 0)
+    {
+        printf("8.Changer le mot de passe\n\n9.Convertir en Crypte\t\t");
+        textcolor(12);
+        printf("10.Menu\n");
+        textcolor(10);
+    }
+    else
+    {
+        textcolor(12);
+        printf("8.Menu\n");
+        textcolor(10);
+    }
+}
+//fonctions pour verification
+
+int verifNomFichier(char *nomFichier, char * typeRepertoire){
+    int resultat = 0;
+    char nomRep[60];
+    FILE * liste;
+    chdir(chemin);
+    if(strcmp(typeRepertoire,"") == 0)
+    {
+        liste = fopen("Repertoire\\listeNonCrypt.txt","a+");
+    }
+    else if(strcmp(typeRepertoire,"Crypt") == 0)
+    {
+        liste = fopen("RepertoireCrypt\\listeCrypt.txt","a+");
+    }
+    while(fscanf(liste,"%s",nomRep) != EOF)
+    {
+        if(strcmp(nomFichier, nomRep) == 0) // si ils sont identique...
+        {
+            resultat += 1;
+            break;
+        }
+    }
+    fclose(liste);
+    return resultat;
+}
+
+void changerMdp(char * nomFichier, char * typeRepertoire, char * mdp){
+    int indice;
+    char mdpCourant[200] = "", nouveauMdp[200] = "", fichierMdp[200] = "", fichierNom[200],tempNom[200] = "copy";
+    char nomSansExtension[200] = "";
+    int mdpErreur = 0,mdpValidation = 0;
+    strncat(nomSansExtension,nomFichier,(strlen(nomFichier) - 4));
+    efface;
+    printf("Changement du mot de passe\n\n");
+    if(essai > 0){
+        reessayer();
+        essai = 0;
+    }
+    printf("Entrez votre mot de passe courant : ");
+    fflush(stdin);
+    scanf("%s",mdpCourant);
+    char tempMdp[200] = "",tempNouveauMdp[200] ="";
+    strcpy(tempNouveauMdp,mdpCourant);
+    crypterMdp(mdpCourant);
+    if(strcmp(mdpCourant,mdp) == 0){
+        mdpErr:
+        if(mdpErreur > 0){
+            rouge;
+            printf("\nErreur : ");
+            textcolor(10);
+            if(mdpErreur == 1)
+                printf("Minimum carac%cteres autoris%ces sont 8.",138,130);
+            else if(mdpErreur == 2)
+                printf("Max caract%cteres autoris%ces sont 16.",138,130);
+            else if(mdpErreur == 3)
+                printf("Au moins un caract%cres speciale.",138);
+            Sleep(1500);
+            efface;
+            printf("Modification du contact\n\nEntrez votre mot de passe : %s\n",tempMdp);
+        }
+        printf("\nEntrez le nouveau mot de passe : ");
+        scanf("%s",nouveauMdp);
+        mdpValidation = verifMotDePasse(nouveauMdp);
+        strcpy(tempNouveauMdp,nouveauMdp);
+        if(mdpValidation > 0){
+            mdpErreur = mdpValidation;
+            goto mdpErr;
+        }
+        crypterMdp(nouveauMdp);
+        strcat(tempNom,nomFichier);
+        FILE * fichierListe = fopen("listeCrypt.txt","r");
+        FILE * fichierListeCopy = fopen("listeCopyCrypt.txt","a+");
+        while(fscanf(fichierListe,"%s %s\n",fichierNom,fichierMdp) != EOF){
+            if(strcmp(nomSansExtension,fichierNom) == 0){
+                fprintf(fichierListeCopy,"%s %s\n",fichierNom,nouveauMdp);
+            }
+            else{
+                fprintf(fichierListeCopy,"%s %s\n",fichierNom,mdp);
+            }
+        }
+        fclose(fichierListe);
+        fclose(fichierListeCopy);
+        chdir("RepertoireCrypt");
+        remove("listeCrypt.txt");
+        rename("listeCopyCrypt.txt","listeCrypt.txt");
+    }
+
+    else{
+        rouge;
+        printf("Mot de passe est incorrect.");
+        vert;
+        Sleep(2000);
+        essai++;
+        changerMdp(nomFichier,typeRepertoire,mdp);
+    }
+    choixErreur:
+    efface;
+    printf("Changement du mot de passe\n\n");
+    printf("Votre mot de passe a ete change.\nNouveaou mot de passe = %s\n\n",tempNouveauMdp);
+    Sleep(1000);
+
+    ligne;
+    char choix;
+    if(essai > 0){
+        reessayer();
+        essai = 0;
+    }
+    printf("Votre choix : ");
+    fflush(stdin);
+    scanf("%c",&choix);
+    switch(choix)
+    {
+        case '*' : chdir(chemin);main();break;
+        case '-' : sousMenu(nomSansExtension,nouveauMdp,typeRepertoire);break;
+        default  : choixIncorrect();essai++;goto choixErreur;
+    }
+
+}
+
+void conversion(char * nomFichier, char * typeRepertoire, char * mdp){
+    efface;
+    int choix,nomDisponibilte = 0;
+    char newChemin[1000] ="",nomRep[200] = "",nomSansExtension[200] = "",listeNomRep[200] = "", listeMdpRep[200] = "";
+    struct contact info;
+    strcat(newChemin,chemin);                //racine
+    strncat(nomSansExtension,nomFichier,strlen(nomFichier)-4);  //nomFichier
+    printf("Conversion du fichier\n\n");
+    rouge;printf("/!\\");vert;
+    printf("Cette procedure va convertir votre repertoire crypte dans un repertoire normal.\nLe repertoire peut se voir par tout le monde et le mot de passe sera enleve.\n\n");
+    printf("Voulez-vous convertir votre repertoire ?\n\n1.Oui\t2.Non\n\n");
+    if(essai > 0){
+        choixIncorrect();
+        essai = 0;
+    }
+    printf("Votre choix : ");
+    fflush(stdin);
+    scanf("%d",&choix);
+    switch(choix)
+    {
+        case 2 : sousMenu(nomFichier,typeRepertoire, mdp);break;
+        default: choixIncorrect();essai++;conversion(nomFichier,typeRepertoire, mdp);break;
+        case 1 :break;
+    }
+    char listeChemin[1000], nomSansExtension1[1000];
+
+    strcpy(nomSansExtension1,nomSansExtension);
+    strcpy(listeChemin,newChemin);
+    strcat(listeChemin,"\\Repertoire\\");
+    chdir(listeChemin);
+    FILE * repertoireListe = fopen("listeNonCrypt.txt","r");
+    while(fscanf(repertoireListe,"%s",nomRep) != EOF){
+        if(strcmp(nomRep,nomSansExtension) == 0){
+            rouge;
+            puts("Erreur :");
+            vert;
+            printf("\n\nVeuillez renommer votre repertoire parce que ce nom deja existe.");
+            getch();
+            sousMenu(nomRep,mdp,typeRepertoire);
+            break;
+        }
+    }
+    fclose(repertoireListe);
+    chdir(listeChemin);
+    repertoireListe = fopen("listeNonCrypt.txt","a+");
+    fprintf(repertoireListe,"%s\n",nomSansExtension1);
+    fclose(repertoireListe);
+
+    if(nomDisponibilte > 0)
+        printf("Le nom du repertoire sera \"%s\" parce que le nom de votre fichier est deja ete pris.\n\n");
+
+    strcat(newChemin,"\\Repertoire\\");
+    strcat(newChemin,nomSansExtension1);
+    chdir(newChemin);
+    FILE * repertoire = fopen(strcat(newChemin,".txt"),"w");
+    chdir(chemin);
+    chdir("RepertoireCrypt");
+    FILE * repertoireCrypt = fopen(nomFichier,"r");
+    FILE * listeRepertoireCrypt = fopen("listeCrypt.txt","r");
+    FILE * copyListeRepertoireCrypt = fopen("copyListeCrypt.txt","a+");
+    while(fscanf(repertoireCrypt,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel) != EOF){
+        decrypter(nomFichier, &info);
+        fprintf(repertoire,"%s %s %s %s\n",info.nom,info.prenom,info.numTel,info.mel);
+    }
+    while(fscanf(listeRepertoireCrypt,"%s %s\n",listeNomRep,listeMdpRep) != EOF){
+        if(strcmp(listeNomRep,nomSansExtension) == 0 && strcmp(listeMdpRep,mdp) == 0){
+            continue;
+        }
+        else{
+            fprintf(copyListeRepertoireCrypt,"%s %s\n",listeNomRep,listeMdpRep);
+        }
+    }
+    fclose(repertoire);
+    fclose(repertoireCrypt);
+    fclose(listeRepertoireCrypt);
+    fclose(copyListeRepertoireCrypt);
+    remove(nomFichier);
+    remove("listeCrypt.txt");
+    rename("copyListeCrypt.txt","listeCrypt.txt");
+    choixErreur:
+    efface;
+    printf("Votre repertoire est desormais decrypte.\n\nVous ne pouvez pas en arriere car votre repertoire existe plus dans\nle repertoire crypte et transfere vert le repertoire normale.\n\n");
+
+    printf("Appuyez sur n'importe quelle touche pour revenir au menu principal.");
+    getch();
+    chdir(chemin);
+    main();
+
+}
+int verifMotDePasse(char * mdp){
+    FILE * liste = fopen("RepertoireCrypt\\listeCrypt.txt","a+");
+    int taille;
+    int erreurs,carSpec = 0;
+    if(strlen(mdp) > 7 || strlen(mdp) > 16)
+    {
+        for(taille = 0; taille < strlen(mdp); taille++)
+        {
+            if((mdp[taille] >= '!' && mdp[taille] < '0') || (mdp[taille] > '9' && mdp[taille] < 'A') || \
+               (mdp[taille] > 'Z' && mdp[taille] < 'a') || (mdp[taille] > 'z' && mdp[taille] <= '~'))
+            {
+                carSpec++;
+            }
+        }
+
+    }
+    if(strlen(mdp) < 8)
+        erreurs = 1;        //erreur pour ne pas repecter la min du chars
+
+    else if(strlen(mdp) > 16)
+        erreurs = 2;        //erreur pour ne pas repecter la min du chars
+
+    else if(carSpec == 0)
+        erreurs = 3;
+
+    if(carSpec > 0 && strlen(mdp) > 7 && strlen(mdp) < 17)
+        erreurs = 0;
+
+    fclose(liste);
+    return erreurs;
+}
+
+// verifEntree
+int verifEntree(char * nomVar, char * nom){
+    int a=0;
+    int nombreMin,nombreMax, arobase = 0, point = 0, espace = 0, erreurs = 0, nbCar = 0;
+    struct contact info;
+    if(nom == "nom" || nom == "prenom")
+    {
+        nombreMax = 20;
+        nombreMin = 1;
+
+        if(strlen(nomVar) > nombreMax)
+    {
+        rouge;
+        printf("\nMaximum char 16!!!");
+        textcolor(10);
+        Sleep(1000);
+        printf("\r                                        \n");
+        a++;
+    }
+    else if (strlen(nomVar) < nombreMax)
+    {
+        int i;
+        for(i=0; i<strlen(nomVar); i++)
+        {
+            if((nomVar[i] >= 'a' && nomVar[i] <= 'z') || (nomVar[i] >= 'A' && nomVar[i] <= 'Z') || \
+                nomVar[i] == '-' || (nomVar[i] > 127 && nomVar[i] < 155) || nomVar[i] == 32)
+            {
+                a = 0;
+            }
+            else
+            {
+                rouge;
+                printf("\nIncorect %s",nom);
+                textcolor(10);
+                Sleep(1000);
+                a++;
+                break;
+            }
+        }
+
+    }
+    }
+
+    else if(nom == "telephone")
+    {
+        int i,erreurs=0;
+        nombreMax = 20;
+        nombreMin = 10;
+
+        if(strlen(nomVar) >= 10 && strlen(nomVar) < 20)
+        {
+            for(i=0; i<strlen(nomVar); i++)
+            {
+                if(nomVar[i] > 47 && nomVar[i] < 58)
+                    erreurs = 0;
+                else
+                {
+                    erreurs = 1;        //si une lettre est trouvée
+                    break;
+                }
+            }
+        }
+        else if (!(strlen(nomVar) >= 10 && strlen(nomVar) < 20)) // si
+        {
+            erreurs = 2;
+        }
+        a = erreurs;
+        if(a == 1 || a == 2)
+        {
+            rouge;
+            printf("\nErreur : ");
+            textcolor(10);
+            if(a==1)
+                printf("Le num%cro prends que les chiffres num%criques.",130,130);
+            else
+                printf("Le num%cro doit %ctre entre 10 - 20 caract%cres",130,136,138);
+            Sleep(3000);
+        }
+    }
+
+
+    else if(nom == "mail")
+    {
+        nombreMax = 30;
+
+        if(strlen(nomVar) > nombreMax)
+    {
+        //printf("\nMaximum char limit passed !!!");
+        a = 1;
+    }
+    else if (strlen(nomVar) < nombreMax)
+    {
+        int taille;
+         for (taille = 0; taille < strlen(nomVar); taille++)
+        {
+            if (nomVar[taille] == '@')
+            {
+                arobase++;
+            }
+            if (nomVar[taille] == '.')
+            {
+                point++;
+            }
+            if (nomVar[taille] == ' ')
+            {
+                espace++;
+            }
+            if ((nomVar[taille] == '@' && nomVar[taille + 1] == '.') || (nomVar[taille] == '@' && nomVar[taille + 1] == '\0')|| \
+                (nomVar[taille] == '.' && nomVar[taille + 1] == '\0') || (nomVar[0] == '@') || (nomVar[0] == '.'))
+            {
+                printf("%d",erreurs + 1);
+                erreurs++;
+            }
+            nbCar++;
+        }
+
+        if(nbCar > 5 && erreurs == 0 && arobase == 1 && point > 0 && espace == 0)
+        {
+            a = 0;
+        }
+        else
+        {
+            rouge;
+            printf("Erreur : ");
+            textcolor(10);
+            printf("Mail incorrect !!!");
+            Sleep(1000);
+            printf("\r                                        \n");
+            a++;
+        }
+    }
+    }
+
+    return a;
+}
+
+void crypter(char * nomRep, struct contact * info){
+    int indice;
+    for(indice = 0; indice < strlen(info->nom); indice++){
+            info->nom[indice] = info->nom[indice] + 35;
+    }
+    for(indice = 0; indice < strlen(info->prenom); indice++){
+            info->prenom[indice] = info->prenom[indice] + 35;
+    }
+    for(indice = 0; indice < strlen(info->numTel); indice++){
+        info->numTel[indice] = info->numTel[indice] + 35;
+    }
+    for(indice = 0; indice < strlen(info->mel); indice++){
+        info->mel[indice] = info->mel[indice] + 35;
+    }
+}
+
+void decrypter(char * nomRep, struct contact * info){
+    int indice;
+    for(indice = 0; indice < strlen(info->nom); indice++){
+            info->nom[indice] = info->nom[indice] - 35;
+    }
+    for(indice = 0; indice < strlen(info->prenom); indice++){
+            info->prenom[indice] = info->prenom[indice] - 35;
+    }
+    for(indice = 0; indice < strlen(info->numTel); indice++){
+        info->numTel[indice] = info->numTel[indice] - 35;
+    }
+    for(indice = 0; indice < strlen(info->mel); indice++){
+        info->mel[indice] = info->mel[indice] - 35;
+    }
+}
+
+void crypterMdp (char * mdp){
+    int i;
+    for(i = 0; i <strlen(mdp); i++){
+                mdp[i] = mdp[i] + 35;
+        }
+}
+
+void decrypterMdp(char * mdp){
+    int i;
+    for(i = 0; i <strlen(mdp); i++){
+                mdp[i] = mdp[i] - 35;
+        }
+}
+
+//affiche un message d'erreur si l'utilisateur se trompe de choix
+void reessayer(){
+    rouge;printf("Veuillez reessayer\n");vert;
+}
+
+void choixIncorrect(){
+    rouge;
+    printf("Choix incorrect");
+    vert;
+    Sleep(1000);efface;
+}
+
+void message(char * nomFonction){
+    printf("\nVous pouvez encore rajouter des contacts \nen choisant l'option \"gerer le fichier\" dans le menu.");
+    printf("\n\nAppuyez sur n'imorte quelle touche du clavier pour revenir au menu.");
+    getch();
+}
+
+void propos(){
+    efface;
+    char choix;
+    gotoxy(30,2);
+    printf("Agenda");
+    gotoxy(1,4);
+    printf("Ce programme est un outil permettant de creer , de gerer les repertoires Cryptés ou non.\n\n");
+    choixErreur:
+    if(essai > 0){
+        reessayer();
+        essai = 0;
+    }
+    printf("Appuyez sur * pour retourner au menu principal :");
+    fflush(stdin);
+    scanf("%c",&choix);
+    switch(choix)
+    {
+        case '*' : main();break;
+        default  : choixIncorrect();essai++;goto choixErreur;
+    }
+}
+
+void controle(char * nomFonc, char * entree, char * mdpRep, char * typeRepertoire, char * nomFichier){
+    char nomRepertoire[200] ="";
+
+    if(strcmp(nomFonc,"gererRepertoire")== 0 || strcmp(nomFonc,"creationRepertoire") == 0){
+        if(strcmp(entree,"-") == 0){
+            if(strcmp(typeRepertoire,"") == 0)
+                repertoire(1);
+            else
+                repertoire(2);
+        }
+        if(strcmp(entree,"*") == 0){
+            chdir(chemin);main();
+        }
+    }
+
+    //si la procedure est appele par la fonction
+     if(strcmp(nomFonc,"sousMenu")== 0){
+        if(strcmp(entree,"-") == 0){
+            gererRepertoire(typeRepertoire);
+        }
+        if(strcmp(entree,"*") == 0){
+            chdir(chemin);
+            chdir(chemin);main();
+        }
+     }
+
+    if(strcmp(nomFonc,"sousMenuOption") == 0){
+        if(strcmp(entree,"-") == 0){
+        if(strcmp(typeRepertoire,"Crypt") == 0){
+            strncat(nomRepertoire,nomFichier,(strlen(nomFichier)-4));   //ici le nom fu fichier estnom.txt ici on enleve l'extension
+            sousMenu(nomRepertoire,mdpRep,typeRepertoire);
+        }
+        else{
+            strncat(nomRepertoire,nomFichier,(strlen(nomFichier)-4));   //ici le nom fu fichier estnom.txt ici on enleve l'extension
+            sousMenu(nomRepertoire,mdpRep,typeRepertoire);
+        }
+        if(strcmp(entree,"*") == 0){
+            chdir(chemin);
+            main();
+        }
+    }
+
+    }
 }
